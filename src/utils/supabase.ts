@@ -90,3 +90,36 @@ export async function deleteGymSession(id: string): Promise<boolean> {
 
   return true;
 }
+
+// Helper function to get the danger status
+export async function getDangerStatus(): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("gym_settings")
+    .select("value")
+    .eq("key", "danger_mode")
+    .single();
+
+  if (error) {
+    console.error("Error fetching danger status:", error);
+    return false;
+  }
+
+  return data?.value === "true";
+}
+
+// Helper function to set the danger status
+export async function setDangerStatus(isDanger: boolean): Promise<boolean> {
+  const { error } = await supabase
+    .from("gym_settings")
+    .upsert(
+      { key: "danger_mode", value: isDanger ? "true" : "false" },
+      { onConflict: "key" }
+    );
+
+  if (error) {
+    console.error("Error setting danger status:", error);
+    return false;
+  }
+
+  return true;
+}

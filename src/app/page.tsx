@@ -1,14 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { isBobbyAtGym, getCurrentSession, GymSession } from "@/utils/supabase";
-import { FiClock } from "react-icons/fi";
+import {
+  isBobbyAtGym,
+  getCurrentSession,
+  GymSession,
+  getDangerStatus,
+} from "@/utils/supabase";
+import { FiClock, FiAlertTriangle } from "react-icons/fi";
 import { format, parseISO } from "date-fns";
 
 export default function Home() {
   const [bobbyPresent, setBobbyPresent] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentSession, setCurrentSession] = useState<GymSession | null>(null);
+  const [isDanger, setIsDanger] = useState<boolean>(false);
 
   useEffect(() => {
     async function checkBobbyStatus() {
@@ -22,6 +28,10 @@ export default function Home() {
       } else {
         setCurrentSession(null);
       }
+
+      // Also check danger status
+      const dangerStatus = await getDangerStatus();
+      setIsDanger(dangerStatus);
 
       setLoading(false);
     }
@@ -54,6 +64,13 @@ export default function Home() {
       }}
     >
       <div className="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden">
+        {isDanger && (
+          <div className="bg-red-600 text-white p-3 flex items-center justify-center animate-pulse">
+            <FiAlertTriangle className="mr-2" size={20} />
+            <span className="font-bold">DANGER MODE ACTIVE</span>
+          </div>
+        )}
+
         <div className="bg-black p-6 text-white">
           <h1 className="text-2xl font-bold text-center flex items-center justify-center">
             <svg
@@ -93,6 +110,10 @@ export default function Home() {
                   bobbyPresent
                     ? "border-4 border-green-500"
                     : "border-4 border-red-500"
+                } ${
+                  isDanger
+                    ? "ring-4 ring-red-500 ring-offset-4 ring-offset-white/90"
+                    : ""
                 }`}
               >
                 <span
@@ -135,6 +156,39 @@ export default function Home() {
                   </div>
                   <div className="mt-3 text-xs bg-green-200 text-green-800 py-1 px-3 rounded-full inline-block">
                     Session ends in {getRemainingTime()} minutes
+                  </div>
+                </div>
+              )}
+
+              {isDanger && (
+                <div className="mt-6 bg-red-50 p-4 rounded-lg border border-red-200">
+                  <div className="flex items-center text-red-800 font-bold mb-2">
+                    <FiAlertTriangle className="mr-2" />
+                    <h3>Danger Alert</h3>
+                  </div>
+                  <p className="text-red-700 text-sm">
+                    A safety concern has been reported at the gym. Please
+                    exercise caution.
+                  </p>
+                </div>
+              )}
+
+              {!isDanger && (
+                <div className="mt-6 bg-blue-50 p-2 rounded-lg border border-blue-200">
+                  <div className="flex items-center text-blue-800 font-bold ">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <h3>Safe Environment</h3>
                   </div>
                 </div>
               )}
