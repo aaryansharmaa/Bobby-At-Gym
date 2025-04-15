@@ -4,16 +4,18 @@ import { useState, useEffect } from "react";
 import {
   isBobbyAtGym,
   getCurrentSession,
+  getFutureSessions,
   GymSession,
   getDangerStatus,
 } from "@/utils/supabase";
-import { FiClock, FiAlertTriangle } from "react-icons/fi";
+import { FiClock, FiAlertTriangle, FiCalendar } from "react-icons/fi";
 import { format, parseISO } from "date-fns";
 
 export default function Home() {
   const [bobbyPresent, setBobbyPresent] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentSession, setCurrentSession] = useState<GymSession | null>(null);
+  const [futureSessions, setFutureSessions] = useState<GymSession[]>([]);
   const [isDanger, setIsDanger] = useState<boolean>(false);
 
   useEffect(() => {
@@ -28,6 +30,10 @@ export default function Home() {
       } else {
         setCurrentSession(null);
       }
+
+      // Get future sessions
+      const futureSessionsData = await getFutureSessions();
+      setFutureSessions(futureSessionsData);
 
       // Also check danger status
       const dangerStatus = await getDangerStatus();
@@ -189,6 +195,38 @@ export default function Home() {
                       />
                     </svg>
                     <h3>Safe Environment</h3>
+                  </div>
+                </div>
+              )}
+
+              {futureSessions.length > 0 && (
+                <div className="mt-6 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center text-purple-800 font-bold mb-2">
+                    <FiCalendar className="mr-2" />
+                    <h3>Upcoming Today</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {futureSessions.map((session) => (
+                      <div
+                        key={session.id}
+                        className="bg-white p-3 rounded-md shadow-sm"
+                      >
+                        <div className="flex items-center text-sm text-purple-700">
+                          <div className="bg-purple-100 px-3 py-1.5 rounded-lg flex items-center mr-4">
+                            <span className="font-medium">Start:</span>
+                            <span className="ml-1">
+                              {format(parseISO(session.start_time), "h:mm a")}
+                            </span>
+                          </div>
+                          <div className="bg-purple-100 px-3 py-1.5 rounded-lg flex items-center">
+                            <span className="font-medium">End:</span>
+                            <span className="ml-1">
+                              {format(parseISO(session.end_time), "h:mm a")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

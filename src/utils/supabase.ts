@@ -123,3 +123,24 @@ export async function setDangerStatus(isDanger: boolean): Promise<boolean> {
 
   return true;
 }
+
+// Helper function to get future sessions for today
+export async function getFutureSessions(): Promise<GymSession[]> {
+  const now = new Date();
+  const endOfDay = new Date(now);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const { data, error } = await supabase
+    .from("gym_sessions")
+    .select("*")
+    .gt("start_time", now.toISOString())
+    .lte("start_time", endOfDay.toISOString())
+    .order("start_time", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching future sessions:", error);
+    return [];
+  }
+
+  return data || [];
+}
